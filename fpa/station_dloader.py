@@ -96,8 +96,14 @@ else:
     stations = [item for sublist in station_rows for item in sublist]
 
 
-for station in stations:
+def fetchStations(stations, limit):
+    counter = 0
+    for station in stations:
+        counter = fetchStation(station, counter, limit)
+        if counter >= limit:
+            return
 
+def fetchStation(station, counter, limit):
     print station
     url = '''https://stations.fcc.gov/station-profile/%s/rss/''' % (station)
 
@@ -110,7 +116,11 @@ for station in stations:
     page = BeautifulSoup(f.read())
 
     for entry in page.find_all('entry'):
+        if counter >= limit:
+            break
         for link in entry.content.div.p.find_all('a'):
+            if counter >= limit:
+                 break
             if link.get_text() == 'here' and 'Political File/' + str(st.YEAR) in link.get('href'):
                 url = link.get('href')
                 fullURL = st.baseurl + url
@@ -129,7 +139,7 @@ for station in stations:
 
                         util.downloadBinary(fullURL, filename)
 
-                        util.pdfToText(filename)
+                        htmlFilename = util.pdfToText(filename)
 
                         rec = processRec(url)
                         rec['id'] = entry.id.get_text().replace(
@@ -141,12 +151,26 @@ for station in stations:
                         db.write(json.dumps(rec) + '\n')
 
                         dbInsert(rec, 'polfile')
-                        pdfpath = '%spdfs/%s.pdf' % (st.basepath, rec['id'])
+                        pdfpath  = '%spdfs/%s.pdf' % (st.basepath, rec['id'])
+                        htmlpath = '%shtml/%s.html' % (st.basepath, rec['id'])
+
                         shutil.move(filename, pdfpath)
+
+                        if os.path.exists(htmlFilename):
+                            shutil.move(htmlFilename, htmlpath)
+
+                        counter += 1
+                            
                     except Exception, e:
                         log.write(outputFile.encode('ascii', 'ignore') + '\n')
                         log.write(str(e))
                         log.write('-------------------\n\n')
+                        raise
+
     updateStation(station)
     db.close()
     log.close()
+    return counter
+
+fetchStations(stations, 500)
+

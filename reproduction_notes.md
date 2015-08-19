@@ -60,6 +60,28 @@ fcc=> commit;
 fcc=> \q
 ```
 
+... and update CONNECTION accordingly, but do not check in my secrets.
+```
+$ vim fpa/settings.py
+$ git update-index --assume-unchanged fpa/settings.py
+```
+
 ## Get some data
-...
+
+I do not have much disk space to work with.  So I hacked station_dloader.py to stop after 500 files.
+
+What does this script do?
+* This program iterates over each state, querying for stations in each state.  The API actually matches by call-sign, not state, contrary to what the API docs say.
+* Find uploads (pdfs), download them into ../html/files.
+* Run `pdftotext -layout -nopgbrk -q -bbox` on the file.  This creates an .html file with the bounding boxes described.
+* Next, mv the pdf to the ../pdfs directory.
+I see I need that html file as ../html/$id.html in order to use it.  Update the station_dloader.py to move that as well.
+
+```
+$ cd fpa
+$ mkdir logs
+$ python station_dloader.py
+$ less logs/station_dloader.log
+```
+
 

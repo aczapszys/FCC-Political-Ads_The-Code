@@ -6,6 +6,7 @@ from lxml.html import parse
 from StringIO import StringIO
 import settings as st
 from datetime import datetime
+import re
 
 x1 = 'xmin'
 y1 = 'ymin'
@@ -64,8 +65,12 @@ def fuzzySplit(s, d):
 def pdfToText(filename):
     """Convert a text-based PDF to HTML."""
     command = ['pdftotext', '-layout', '-nopgbrk', '-q', '-bbox']
+    htmlFilename = re.sub(r'\.pdf$', '.html', filename, flags=re.IGNORECASE)
+    if htmlFilename == filename:
+        htmlFilename = None
     p = subprocess.Popen(command + [filename], stdout=subprocess.PIPE)
     p.communicate()
+    return htmlFilename
 
 
 def dataAtHocrBboxes(bboxes, htmlpath, returnFirstWord=False):
