@@ -84,4 +84,46 @@ $ python station_dloader.py
 $ less logs/station_dloader.log
 ```
 
+## Determine docformat and doctype
+
+It looks like I can run `pq.py markCommonFromLocalText` to get tab-delimited output, but the query
+the command runs is totally wrong for this command:
+```
+('SELECT "a"."id" FROM "polfile" AS "a" WHERE ((("a"."doctype" = %s) AND ("a"."docformat" = %s)) AND ("a"."id" IS NULL))', ('T', 'Common Contract'))
+```
+
+Update this to run a sensible query, and then load in the results.
+
+```
+$ python pq.py markCommonFromLocalText > format_type.tsv
+fcc=> create temp  table tmp_polfile (id text primary key, doctype text, docformat text);
+CREATE TABLE
+fcc=> \copy tmp_polfile (id, docformat, doctype) from 'format_doctype.tsv' with null 'None'
+fcc=> update polfile set doctype = tmp_polfile.doctype, docformat = tmp_polfile.docformat from tmp_polfile where polfile.id = tmp_polfile.id;
+UPDATE 500
+fcc=> \q
+```
+
+## Determine urx, ury columns in polfile.
+
+get_bboxes.sh calls printParallelParams which seems to require the params we want to extract.
+I wrote a new printPDFPaths command and call that instead.
+
+```
+$ bash get_bboxes.sh > bboxes.tsv
+
+fcc=> create table bboxes (
+fcc(>     id text primary key,
+fcc(>     lower_left_x integer,
+fcc(>     lower_left_y integer,
+fcc(>     upper_right_x integer,
+fcc(>     upper_right_y integer
+fcc(> )
+fcc-> ;
+CREATE TABLE
+fcc=> \copy bboxes from 'bboxes.tsv'
+fcc=> update polfile set urx = bboxes.upper_right_x, ury = bboxes.upper_right_y from bboxes where polfile.id = bboxes.id;
+UPDATE 500
+```
+
 

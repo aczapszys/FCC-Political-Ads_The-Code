@@ -11,10 +11,20 @@ Examples:
     
 """
 
-from bulkprocesses import bulkProcess, markCommonFromLocalText, parseTextContracts, parseTextInvoices, parseTextOrders, printParallelParams
+from bulkprocesses import bulkProcess, markCommonFromLocalText, parseTextContracts, parseTextInvoices, parseTextOrders, printParallelParams, PrintPDFPaths
 import settings as st
 import formatschemas as fs
 import queries
+
+
+import logging
+
+def printPDFPaths_cmd():
+    """Command that runs process to print PDF filenames."""
+    query = ('select * from polfile', ())
+
+    process = PrintPDFPaths()
+    bulkProcess(process, query, abortOnError=True)
 
 
 def printParallelParams_cmd(resolution, targetfield, where=None, limit=None):
@@ -35,7 +45,8 @@ def markCommonFromLocalText_cmd(where=None, limit=None):
 
     docformat = st.DOCFORMAT_CONTRACT
 
-    query = queries.idOnly('T', docformat, where, limit)
+    query = ('SELECT "a"."id" FROM "polfile" AS "a"', ())
+
     process = markCommonFromLocalText()
     bulkProcess(process, query, abortOnError=True)
 

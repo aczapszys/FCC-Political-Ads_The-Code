@@ -38,6 +38,12 @@ class Polfile(object):
 
 
 
+class PrintPDFPaths(Process):
+    """Process to print PDF paths."""
+    def method(self, polfile, conn, cur, abortOnError=True):
+        print(polfile.pdfpath)
+
+
 class printParallelParams(Process):
     """Process to print parameters needed to extract a PDF with GNU Parallel."""
     def method(self, polfile, conn, cur, abortOnError=True):
